@@ -1,4 +1,4 @@
-module wallet
+module github.com/wallet
 
 go 1.15
 
