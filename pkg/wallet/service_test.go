@@ -1,9 +1,9 @@
 package wallet
 
 import (
+	"github.com/bdaler/wallet/pkg/types"
 	"reflect"
 	"testing"
-	"wallet/pkg/types"
 )
 
 func TestService_Deposit(t *testing.T) {

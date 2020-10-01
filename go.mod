@@ -1,4 +1,4 @@
-module github.com/wallet
+module github.com/bdaler/wallet
 
 go 1.15
 
