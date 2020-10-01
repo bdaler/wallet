@@ -17,7 +17,7 @@ type Service struct {
 	payments      []*types.Payment
 }
 
-func (s Service) RegisterAccount(phone types.Phone) (*types.Account, error) {
+func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error) {
 	for _, account := range s.accounts {
 		if account.Phone == phone {
 			return nil, ErrPhoneRegistered
@@ -33,7 +33,7 @@ func (s Service) RegisterAccount(phone types.Phone) (*types.Account, error) {
 	return account, nil
 }
 
-func (s Service) Deposit(accountID int64, amount types.Money) error {
+func (s *Service) Deposit(accountID int64, amount types.Money) error {
 	if amount <= 0 {
 		return ErrAmountMustBePositive
 	}
@@ -53,7 +53,7 @@ func (s Service) Deposit(accountID int64, amount types.Money) error {
 	return nil
 }
 
-func (s Service) Pay(accountID int64, amount types.Money, category types.PaymentCategory) (*types.Payment, error) {
+func (s *Service) Pay(accountID int64, amount types.Money, category types.PaymentCategory) (*types.Payment, error) {
 	if amount <= 0 {
 		return nil, ErrAmountMustBePositive
 	}
@@ -81,7 +81,7 @@ func (s Service) Pay(accountID int64, amount types.Money, category types.Payment
 	return payment, nil
 }
 
-func (s Service) FindAccountByID(accountID int64) (*types.Account, error) {
+func (s *Service) FindAccountByID(accountID int64) (*types.Account, error) {
 	for _, account := range s.accounts {
 		if account.ID == accountID {
 			return account, nil
