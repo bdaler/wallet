@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-
 var ErrPhoneRegistered = errors.New("phone already registered")
 var ErrAmountMustBePositive = errors.New("amount must be greater than zero")
 var ErrAccountNotFound = errors.New("account not found")
@@ -83,15 +82,10 @@ func (s Service) Pay(accountID int64, amount types.Money, category types.Payment
 }
 
 func (s Service) FindAccountByID(accountID int64) (*types.Account, error) {
-	var account *types.Account
-	for _, acc := range s.accounts {
-		if acc.ID == accountID {
-			account = acc
-			break
+	for _, account := range s.accounts {
+		if account.ID == accountID {
+			return account, nil
 		}
 	}
-	if account == nil {
-		return nil, ErrAccountNotFound
-	}
-	return account, nil
+	return nil, ErrAccountNotFound
 }
