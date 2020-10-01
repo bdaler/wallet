@@ -2,10 +2,10 @@ package wallet
 
 import (
 	"errors"
+	"github.com/bdaler/wallet/pkg/types"
 	"github.com/google/uuid"
 )
 
-import "wallet/pkg/types"
 
 var ErrPhoneRegistered = errors.New("phone already registered")
 var ErrAmountMustBePositive = errors.New("amount must be greater than zero")
