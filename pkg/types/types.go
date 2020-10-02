@@ -12,6 +12,12 @@ const (
 	PaymentStatusInProgress PaymentStatus = "INPROGRESS"
 )
 
+const (
+	CategoryFood = "food"
+	CategoryIt   = "it"
+	CategoryShop = "shop"
+)
+
 type Payment struct {
 	ID        string
 	AccountID int64
