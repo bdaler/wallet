@@ -13,7 +13,7 @@ var ErrNotEnoughBalance = errors.New("not enough balance in account")
 var ErrPaymentNotFound = errors.New("payment not found")
 var ErrCannotRegisterAccount = errors.New("can not register account")
 var ErrCannotDepositAccount = errors.New("can not deposit account")
-var ErrFavoritePaymentNotFound = errors.New("favorite payment not found")
+var ErrFavoriteNotFound = errors.New("favorite payment not found")
 
 type Service struct {
 	nextAccountID int64
@@ -184,5 +184,5 @@ func (s *Service) FindFavoriteByID(favoriteID string) (*types.Favorite, error) {
 			return favorite, nil
 		}
 	}
-	return nil, ErrFavoritePaymentNotFound
+	return nil, ErrFavoriteNotFound
 }
