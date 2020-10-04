@@ -2,9 +2,18 @@ package wallet
 
 import (
 	"github.com/bdaler/wallet/pkg/types"
+	"github.com/google/uuid"
 	"reflect"
 	"testing"
 )
+
+var defaultFavorite = types.Favorite{
+	ID:        uuid.New().String(),
+	AccountID: 1,
+	Name:      types.CategoryIt,
+	Amount:    10,
+	Category:  types.CategoryIt,
+}
 
 type testService struct {
 	*Service
@@ -476,4 +485,129 @@ func TestService_Repeat_success(t *testing.T) {
 		t.Errorf("newPayment => %v", newPayment)
 		return
 	}
+}
+
+func TestService_FavoritePayment_success(t *testing.T) {
+	s := newTestService()
+	account, err := s.AddAccountWithBalance("9127660305", 100)
+	if err != nil {
+		t.Errorf("account => %v", account)
+		return
+	}
+
+	payment, err := s.Pay(account.ID, 10, types.CategoryIt)
+	if err != nil {
+		t.Errorf("payment => %v", payment)
+		return
+	}
+
+	favorite, err := s.FavoritePayment(payment.ID, types.CategoryIt)
+	if err != nil {
+		t.Errorf("favorite => %v", favorite)
+		return
+	}
+
+	payFromFavorite, err := s.PayFromFavorite(favorite.ID)
+	if err != nil {
+		t.Errorf("payFromFavorite => %v", payFromFavorite)
+		return
+	}
+}
+
+func TestService_FindFavoriteByID(t *testing.T) {
+	type fields struct {
+		nextAccountID int64
+		accounts      []*types.Account
+		payments      []*types.Payment
+		favorites     []*types.Favorite
+	}
+	type args struct {
+		favoriteID string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Favorite
+		wantErr bool
+	}{
+		{
+			name: "successFull find",
+			fields: fields{
+				nextAccountID: 0,
+				accounts:      Accounts(),
+				payments:      Payments(),
+				favorites:     Favorites(),
+			},
+			args: args{
+				favoriteID: defaultFavorite.ID,
+			},
+			want:    &defaultFavorite,
+			wantErr: false,
+		},
+		{
+			name: "successFull find",
+			fields: fields{
+				nextAccountID: 0,
+				accounts:      Accounts(),
+				payments:      Payments(),
+				favorites:     Favorites(),
+			},
+			args: args{
+				favoriteID: "nonExistingFavoriteID",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Service{
+				nextAccountID: tt.fields.nextAccountID,
+				accounts:      tt.fields.accounts,
+				payments:      tt.fields.payments,
+				favorites:     tt.fields.favorites,
+			}
+			got, err := s.FindFavoriteByID(tt.args.favoriteID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FindFavoriteByID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FindFavoriteByID() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Favorites() []*types.Favorite {
+	var favorites []*types.Favorite
+	favorites = append(
+		favorites,
+		&types.Favorite{
+			ID:        defaultFavorite.ID,
+			AccountID: Accounts()[0].ID,
+			Name:      types.CategoryIt,
+			Amount:    10,
+			Category:  types.CategoryIt,
+		}, &types.Favorite{
+			ID:        uuid.New().String(),
+			AccountID: Accounts()[1].ID,
+			Name:      types.CategoryIt,
+			Amount:    10,
+			Category:  types.CategoryIt,
+		}, &types.Favorite{
+			ID:        uuid.New().String(),
+			AccountID: Accounts()[2].ID,
+			Name:      types.CategoryIt,
+			Amount:    10,
+			Category:  types.CategoryIt,
+		}, &types.Favorite{
+			ID:        uuid.New().String(),
+			AccountID: Accounts()[3].ID,
+			Name:      types.CategoryIt,
+			Amount:    10,
+			Category:  types.CategoryIt,
+		})
+	return favorites
 }
