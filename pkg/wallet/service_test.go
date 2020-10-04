@@ -6,6 +6,16 @@ import (
 	"testing"
 )
 
+type testService struct {
+	*Service
+}
+
+func newTestService() *testService {
+	return &testService{
+		Service: &Service{},
+	}
+}
+
 func TestService_FindAccountByID_success(t *testing.T) {
 	var service Service
 	service.RegisterAccount("9127660305")
@@ -383,43 +393,6 @@ func TestService_Pay(t *testing.T) {
 	}
 }
 
-func TestService_RegisterAccount1(t *testing.T) {
-	type fields struct {
-		nextAccountID int64
-		accounts      []*types.Account
-		payments      []*types.Payment
-	}
-	type args struct {
-		phone types.Phone
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *types.Account
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Service{
-				nextAccountID: tt.fields.nextAccountID,
-				accounts:      tt.fields.accounts,
-				payments:      tt.fields.payments,
-			}
-			got, err := s.RegisterAccount(tt.args.phone)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("RegisterAccount() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("RegisterAccount() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestService_Reject(t *testing.T) {
 	type fields struct {
 		nextAccountID int64
@@ -481,4 +454,26 @@ func Payments() []*types.Payment {
 			Status:    types.PaymentStatusInProgress,
 		})
 	return payments
+}
+
+func TestService_Repeat_success(t *testing.T) {
+	s := newTestService()
+
+	account, err := s.AddAccountWithBalance("9127660305", 100)
+	if err != nil {
+		t.Errorf("account => %v", account)
+		return
+	}
+
+	payment, err := s.Pay(account.ID, 10, types.CategoryIt)
+	if err != nil {
+		t.Errorf("payment => %v", payment)
+		return
+	}
+
+	newPayment, err := s.Repeat(payment.ID)
+	if err != nil {
+		t.Errorf("newPayment => %v", newPayment)
+		return
+	}
 }

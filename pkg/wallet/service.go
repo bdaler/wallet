@@ -11,6 +11,8 @@ var ErrAmountMustBePositive = errors.New("amount must be greater than zero")
 var ErrAccountNotFound = errors.New("account not found")
 var ErrNotEnoughBalance = errors.New("not enough balance in account")
 var ErrPaymentNotFound = errors.New("payment not found")
+var ErrCannotRegisterAccount = errors.New("can not register account")
+var ErrCannotDepositAccount = errors.New("can not deposit account")
 
 type Service struct {
 	nextAccountID int64
@@ -115,4 +117,34 @@ func (s *Service) Reject(paymentID string) error {
 	account.Balance += payment.Amount
 
 	return nil
+}
+
+func (s *Service) AddAccountWithBalance(phone types.Phone, balance types.Money) (*types.Account, error) {
+	account, err := s.RegisterAccount(phone)
+	if err != nil {
+		return nil, ErrCannotRegisterAccount
+	}
+
+	err = s.Deposit(account.ID, balance)
+	if err != nil {
+		return nil, ErrCannotDepositAccount
+	}
+	return account, nil
+}
+
+func (s *Service) Repeat(paymentID string) (*types.Payment, error) {
+	var targetPayment, err = s.FindPaymentByID(paymentID)
+	if err != nil {
+		return nil, err
+	}
+
+	newPayment := &types.Payment{
+		ID:        uuid.New().String(),
+		AccountID: targetPayment.AccountID,
+		Amount:    targetPayment.Amount,
+		Category:  targetPayment.Category,
+		Status:    targetPayment.Status,
+	}
+
+	return newPayment, nil
 }
