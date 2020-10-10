@@ -4,6 +4,11 @@ import (
 	"errors"
 	"github.com/bdaler/wallet/pkg/types"
 	"github.com/google/uuid"
+	"io"
+	"log"
+	"os"
+	"strconv"
+	"strings"
 )
 
 var ErrPhoneRegistered = errors.New("phone already registered")
@@ -185,4 +190,80 @@ func (s *Service) FindFavoriteByID(favoriteID string) (*types.Favorite, error) {
 		}
 	}
 	return nil, ErrFavoriteNotFound
+}
+
+func (s *Service) getAccounts() []*types.Account {
+	return s.accounts
+}
+
+func (s *Service) ExportToFile(path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil {
+			log.Print(closeErr)
+		}
+	}()
+
+	for _, account := range s.getAccounts() {
+		ID := strconv.FormatInt(account.ID, 10) + ";"
+		phone := string(account.Phone) + ";"
+		balance := strconv.FormatInt(int64(account.Balance), 10)
+		_, err = file.Write([]byte(ID + phone + balance + "|"))
+		if err != nil {
+			log.Print(err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Service) ImportFromFile(path string) error {
+
+	file, err := os.Open(path)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil {
+			log.Print(closeErr)
+		}
+	}()
+
+	content := make([]byte, 0)
+	buff := make([]byte, 4)
+
+	for {
+		read, err := file.Read(buff)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Print(err)
+			return err
+		}
+		content = append(content, buff[:read]...)
+	}
+	str := string(content)
+	for _, line := range strings.Split(str, "|") {
+		if len(line) <= 0 {
+			return err
+		}
+
+		item := strings.Split(line, ";")
+		ID, _ := strconv.ParseInt(item[0], 10, 64)
+		balance, _ := strconv.ParseInt(item[2], 10, 64)
+
+		s.accounts = append(s.accounts, &types.Account{
+			ID:      ID,
+			Phone:   types.Phone(item[1]),
+			Balance: types.Money(balance),
+		})
+	}
+
+	return err
 }

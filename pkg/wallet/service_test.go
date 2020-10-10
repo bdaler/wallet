@@ -611,3 +611,15 @@ func Favorites() []*types.Favorite {
 		})
 	return favorites
 }
+
+func TestService_ExportToFile(t *testing.T) {
+	s := newTestService()
+	_, _ = s.AddAccountWithBalance("9127660305", 10)
+	_, _ = s.AddAccountWithBalance("9127660306", 11)
+	_ = s.ExportToFile("../../data/accounts.txt")
+}
+
+func TestService_ImportFromFile(t *testing.T) {
+	s := newTestService()
+	_ = s.ImportFromFile("../../data/accounts.txt")
+}
