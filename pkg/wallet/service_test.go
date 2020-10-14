@@ -623,3 +623,21 @@ func TestService_ImportFromFile(t *testing.T) {
 	s := newTestService()
 	_ = s.ImportFromFile("../../data/accounts.txt")
 }
+
+func TestService_Export(t *testing.T) {
+	s := newTestService()
+	account1, _ := s.AddAccountWithBalance("9127660305", 10)
+	payment, _ := s.Pay(account1.ID, 10, types.CategoryIt)
+	_, _ = s.FavoritePayment(payment.ID, types.CategoryIt)
+
+	account2, _ := s.AddAccountWithBalance("9127660306", 11)
+	payment2, _ := s.Pay(account2.ID, 10, types.CategoryIt)
+	_, _ = s.FavoritePayment(payment2.ID, types.CategoryIt)
+
+	_ = s.Export("../../data/s")
+}
+
+func TestService_Import(t *testing.T) {
+	s := newTestService()
+	_ = s.Import("../../data/")
+}
