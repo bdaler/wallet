@@ -277,8 +277,8 @@ func (s *Service) Export(dir string) error {
 	for _, account := range s.accounts {
 		ID := strconv.FormatInt(account.ID, 10) + ";"
 		phone := string(account.Phone) + ";"
-		balance := strconv.FormatInt(int64(account.Balance), 10) + "\n"
-		err := WriteToFile(dir+"/accounts.dump", []byte(ID+phone+balance))
+		balance := strconv.FormatInt(int64(account.Balance), 10)
+		err := WriteToFile(dir+"/accounts.dump", []byte(ID+phone+balance+"\n"))
 		if err != nil {
 			return err
 		}
@@ -373,7 +373,6 @@ func (s *Service) Import(dir string) error {
 
 		for {
 			line, err := reader.ReadString('\n')
-			log.Print("line before OEF: ", line)
 			if err == io.EOF {
 				log.Print("line in OEF: ", line)
 				break
@@ -412,7 +411,7 @@ func (s *Service) Import(dir string) error {
 
 func (s *Service) convertToAccount(item []string) *types.Account {
 	ID, _ := strconv.ParseInt(item[0], 10, 64)
-	balance, _ := strconv.ParseInt(item[2], 10, 64)
+	balance, _ := strconv.ParseInt(removeEndLine(item[2]), 10, 64)
 	account, err := s.FindAccountByID(ID)
 	if err != nil {
 		s.nextAccountID++
@@ -446,7 +445,7 @@ func (s *Service) convertToFavorites(item []string) *types.Favorite {
 	favorite.AccountID = AccountID
 	favorite.Name = item[2]
 	favorite.Amount = types.Money(Amount)
-	favorite.Category = types.PaymentCategory(item[4])
+	favorite.Category = types.PaymentCategory(removeEndLine(item[4]))
 	return nil
 }
 
@@ -461,7 +460,7 @@ func (s *Service) convertToPayments(item []string) *types.Payment {
 			AccountID: AccountID,
 			Amount:    types.Money(Amount),
 			Category:  types.PaymentCategory(item[3]),
-			Status:    types.PaymentStatus(item[4]),
+			Status:    types.PaymentStatus(removeEndLine(item[4])),
 		}
 	}
 	payment.ID = item[0]
@@ -470,4 +469,10 @@ func (s *Service) convertToPayments(item []string) *types.Payment {
 	payment.Category = types.PaymentCategory(item[3])
 	payment.Status = types.PaymentStatus(item[4])
 	return nil
+}
+
+func removeEndLine(balance string) string {
+	return strings.TrimRightFunc(balance, func(c rune) bool {
+		return c == '\r' || c == '\n'
+	})
 }

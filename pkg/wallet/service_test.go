@@ -1,8 +1,11 @@
 package wallet
 
 import (
+	"errors"
 	"github.com/bdaler/wallet/pkg/types"
 	"github.com/google/uuid"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -640,4 +643,69 @@ func TestService_Export(t *testing.T) {
 func TestService_Import(t *testing.T) {
 	s := newTestService()
 	_ = s.Import("../../data/")
+}
+func TestService_Import2(t *testing.T) {
+	dirname := uuid.New().String()
+
+	// создаём сервис
+	s := newTestService()
+	account1, _ := s.AddAccountWithBalance("9127660305", 10)
+	payment, _ := s.Pay(account1.ID, 10, types.CategoryIt)
+	_, _ = s.FavoritePayment(payment.ID, types.CategoryIt)
+
+	account2, _ := s.AddAccountWithBalance("9127660306", 11)
+	payment2, _ := s.Pay(account2.ID, 10, types.CategoryIt)
+	_, _ = s.FavoritePayment(payment2.ID, types.CategoryIt)
+
+	err := os.Mkdir(dirname, 0777)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	err = s.Export(dirname)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = os.Stat(filepath.Join(dirname, "accounts.dump"))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = os.Stat(filepath.Join(dirname, "payments.dump"))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	//_, err = os.Stat(filepath.Join(dirname, "favorites.dump"))
+	//if err == nil {
+	//	t.Error(errors.New("favorites.dump should not exists"))
+	//	return
+	//}
+
+	i := newTestService()
+	err = i.Import(dirname)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if !reflect.DeepEqual(s.accounts, i.accounts) {
+		t.Error(errors.New("imported and exported accounts doesn't match"))
+		return
+	}
+
+	if !reflect.DeepEqual(s.payments, i.payments) {
+		t.Error(errors.New("imported and exported payments doesn't match"))
+		return
+	}
+
+	//if !reflect.DeepEqual(s.favorites, i.favorites) {
+	//	t.Error(errors.New("imported and exported favorites doesn't match"))
+	//	return
+	//}
 }
