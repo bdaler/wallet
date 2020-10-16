@@ -351,7 +351,6 @@ func WriteToFile(fileName string, data []byte) error {
 }
 
 func (s *Service) Import(dir string) error {
-	s.ExecCmd()
 	log.Print("account count in the start of import method: ", len(s.accounts))
 	log.Print("Start Import method with param: " + dir)
 	files, err := ioutil.ReadDir(dir)
