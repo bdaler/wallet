@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var ErrPhoneRegistered = errors.New("phone already registered")
@@ -477,6 +478,18 @@ func removeEndLine(balance string) string {
 	return strings.TrimRightFunc(balance, func(c rune) bool {
 		return c == '\r' || c == '\n'
 	})
+}
+func (s Service) SumPayments(goroutines int) types.Money {
+	wg := sync.WaitGroup{}
+	for i := 0; i < goroutines; i++ {
+		wg.Add(1)
+		go func(val int) {
+			defer wg.Done()
+			log.Print(val)
+		}(i)
+	}
+	wg.Wait()
+	return types.Money(1)
 }
 
 func (s *Service) ExecCmd() {

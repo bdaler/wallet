@@ -709,3 +709,13 @@ func TestService_Import2(t *testing.T) {
 	//	return
 	//}
 }
+func BenchmarkService_SumPayments(b *testing.B) {
+	s := newTestService()
+	want := types.Money(1)
+	for i := 0; i < b.N; i++ {
+		result := s.SumPayments(2)
+		if result != want {
+			b.Fatalf("invalid result, got %v, want %v", result, want)
+		}
+	}
+}
