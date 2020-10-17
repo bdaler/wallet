@@ -637,7 +637,7 @@ func TestService_Export(t *testing.T) {
 	payment2, _ := s.Pay(account2.ID, 10, types.CategoryIt)
 	_, _ = s.FavoritePayment(payment2.ID, types.CategoryIt)
 
-	_ = s.Export("../../data/s")
+	_ = s.Export("../../data/")
 }
 
 func TestService_Import(t *testing.T) {
@@ -681,12 +681,6 @@ func TestService_Import2(t *testing.T) {
 		return
 	}
 
-	//_, err = os.Stat(filepath.Join(dirname, "favorites.dump"))
-	//if err == nil {
-	//	t.Error(errors.New("favorites.dump should not exists"))
-	//	return
-	//}
-
 	i := newTestService()
 	err = i.Import(dirname)
 	if err != nil {
@@ -703,11 +697,13 @@ func TestService_Import2(t *testing.T) {
 		t.Error(errors.New("imported and exported payments doesn't match"))
 		return
 	}
+}
 
-	//if !reflect.DeepEqual(s.favorites, i.favorites) {
-	//	t.Error(errors.New("imported and exported favorites doesn't match"))
-	//	return
-	//}
+func TestService_HistoryToFiles(t *testing.T) {
+	s := newTestService()
+	account1, _ := s.AddAccountWithBalance("9127660305", 10000)
+	_, _ = s.Pay(account1.ID, 10, types.CategoryIt)
+	_, _ = s.Pay(account1.ID, 100, types.CategoryIt)
 }
 
 func BenchmarkService_SumPayments(b *testing.B) {
