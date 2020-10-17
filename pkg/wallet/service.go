@@ -477,6 +477,56 @@ func removeEndLine(balance string) string {
 		return c == '\r' || c == '\n'
 	})
 }
+
+func (s *Service) ExportAccountHistory(accountID int64) ([]types.Payment, error) {
+	var payments []types.Payment
+	for _, payment := range s.payments {
+		if payment.AccountID == accountID {
+			payments = append(payments, *payment)
+		}
+	}
+	if len(payments) <= 0 {
+		return nil, ErrAccountNotFound
+	}
+	return payments, nil
+}
+
+func (s *Service) HistoryToFiles(payments []types.Payment, dir string, records int) error {
+	if len(payments) > 0 {
+		if len(payments) <= records {
+			for _, payment := range payments {
+				ID := payment.ID + ";"
+				AccountID := strconv.FormatInt(payment.AccountID, 10) + ";"
+				Amount := strconv.FormatInt(int64(payment.Amount), 10) + ";"
+				Category := string(payment.Category) + ";"
+				Status := string(payment.Status) + "\n"
+				err := WriteToFile(dir+"/payments.dump", []byte(ID+AccountID+Amount+Category+Status))
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			index := 1
+			maxRec := len(payments) / records
+			for i, payment := range payments {
+				ID := payment.ID + ";"
+				AccountID := strconv.FormatInt(payment.AccountID, 10) + ";"
+				Amount := strconv.FormatInt(int64(payment.Amount), 10) + ";"
+				Category := string(payment.Category) + ";"
+				Status := string(payment.Status) + "\n"
+				err := WriteToFile(dir+"/payments"+strconv.Itoa(i+1)+".dump", []byte(ID+AccountID+Amount+Category+Status))
+				if err != nil {
+					return err
+				}
+				if i+1 >= maxRec {
+					index++
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func (s Service) SumPayments(goroutines int) types.Money {
 	wg := sync.WaitGroup{}
 	mu := sync.Mutex{}
@@ -519,51 +569,4 @@ func (s Service) SumPayments(goroutines int) types.Money {
 	}()
 	wg.Wait()
 	return types.Money(sum)
-}
-
-func (s *Service) ExportAccountHistory(accountID int64) ([]types.Payment, error) {
-	var payments []types.Payment
-	for _, payment := range s.payments {
-		if payment.AccountID == accountID {
-			payments = append(payments, *payment)
-		}
-	}
-	if len(payments) <= 0 {
-		return nil, ErrAccountNotFound
-	}
-	return payments, nil
-}
-
-func (s *Service) HistoryToFiles(payments []types.Payment, dir string, records int) error {
-	if len(payments) < records {
-		for _, payment := range payments {
-			ID := payment.ID + ";"
-			AccountID := strconv.FormatInt(payment.AccountID, 10) + ";"
-			Amount := strconv.FormatInt(int64(payment.Amount), 10) + ";"
-			Category := string(payment.Category) + ";"
-			Status := string(payment.Status) + "\n"
-			err := WriteToFile(dir+"/payments.dump", []byte(ID+AccountID+Amount+Category+Status))
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		index := 1
-		maxRec := len(payments) / records
-		for i, payment := range payments {
-			ID := payment.ID + ";"
-			AccountID := strconv.FormatInt(payment.AccountID, 10) + ";"
-			Amount := strconv.FormatInt(int64(payment.Amount), 10) + ";"
-			Category := string(payment.Category) + ";"
-			Status := string(payment.Status) + "\n"
-			err := WriteToFile(dir+"/payments"+strconv.Itoa(i+1)+".dump", []byte(ID+AccountID+Amount+Category+Status))
-			if err != nil {
-				return err
-			}
-			if i+1 >= maxRec {
-				index++
-			}
-		}
-	}
-	return nil
 }
