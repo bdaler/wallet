@@ -3,6 +3,7 @@ package wallet
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"github.com/bdaler/wallet/pkg/types"
 	"github.com/google/uuid"
 	"io"
@@ -494,34 +495,35 @@ func (s *Service) ExportAccountHistory(accountID int64) ([]types.Payment, error)
 func (s *Service) HistoryToFiles(payments []types.Payment, dir string, records int) error {
 	if len(payments) > 0 {
 		if len(payments) <= records {
-			for _, payment := range payments {
-				ID := payment.ID + ";"
-				AccountID := strconv.FormatInt(payment.AccountID, 10) + ";"
-				Amount := strconv.FormatInt(int64(payment.Amount), 10) + ";"
-				Category := string(payment.Category) + ";"
-				Status := string(payment.Status) + "\n"
-				err := WriteToFile(dir+"/payments.dump", []byte(ID+AccountID+Amount+Category+Status))
-				if err != nil {
-					return err
-				}
+			file, _ := os.OpenFile(dir+"/payments.dump", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+			defer file.Close()
+
+			var str string
+			for _, v := range payments {
+				str += fmt.Sprint(v.ID) + ";" + fmt.Sprint(v.AccountID) + ";" + fmt.Sprint(v.Amount) + ";" + fmt.Sprint(v.Category) + ";" + fmt.Sprint(v.Status) + "\n"
 			}
+			file.WriteString(str)
 		} else {
-			index := 1
-			maxRec := len(payments) / records
-			for i, payment := range payments {
-				ID := payment.ID + ";"
-				AccountID := strconv.FormatInt(payment.AccountID, 10) + ";"
-				Amount := strconv.FormatInt(int64(payment.Amount), 10) + ";"
-				Category := string(payment.Category) + ";"
-				Status := string(payment.Status) + "\n"
-				err := WriteToFile(dir+"/payments"+strconv.Itoa(i+1)+".dump", []byte(ID+AccountID+Amount+Category+Status))
-				if err != nil {
-					return err
+
+			var str string
+			k := 0
+			t := 1
+			var file *os.File
+			for _, v := range payments {
+				if k == 0 {
+					file, _ = os.OpenFile(dir+"/payments"+fmt.Sprint(t)+".dump", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 				}
-				if i+1 >= maxRec {
-					index++
+				k++
+				str = fmt.Sprint(v.ID) + ";" + fmt.Sprint(v.AccountID) + ";" + fmt.Sprint(v.Amount) + ";" + fmt.Sprint(v.Category) + ";" + fmt.Sprint(v.Status) + "\n"
+				_, _ = file.WriteString(str)
+				if k == records {
+					str = ""
+					t++
+					k = 0
+					file.Close()
 				}
 			}
+
 		}
 	}
 	return nil

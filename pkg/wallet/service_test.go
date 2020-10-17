@@ -645,7 +645,7 @@ func TestService_Import(t *testing.T) {
 	_ = s.Import("../../data/")
 }
 func TestService_Import2(t *testing.T) {
-	dirname := uuid.New().String()
+	dirname := "../../data/" + uuid.New().String()
 
 	// создаём сервис
 	s := newTestService()
