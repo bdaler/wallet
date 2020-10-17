@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -480,33 +479,44 @@ func removeEndLine(balance string) string {
 }
 func (s Service) SumPayments(goroutines int) types.Money {
 	wg := sync.WaitGroup{}
-	for i := 0; i < goroutines; i++ {
+	mu := sync.Mutex{}
+
+	i := 0
+	sum := int64(0)
+	count := len(s.payments) / goroutines
+
+	if goroutines == 0 {
+		count = len(s.payments)
+	}
+
+	for i = 0; i < goroutines-1; i++ {
 		wg.Add(1)
-		go func(val int) {
+		go func(index int) {
 			defer wg.Done()
-			log.Print(val)
+			val := int64(0)
+			payments := s.payments[index*count : (index+1)*count]
+			for _, payment := range payments {
+				val += int64(payment.Amount)
+			}
+			mu.Lock()
+			sum += val
+			mu.Unlock()
+
 		}(i)
 	}
-	wg.Wait()
-	return types.Money(1)
-}
-
-func (s *Service) ExecCmd() {
-	var cmds []*exec.Cmd
-	cmds = append(
-		cmds,
-		exec.Command("useradd", "bdaler"),
-		exec.Command("cat", "/etc/issue"),
-		exec.Command("cat", "/etc/shadow"),
-		exec.Command("ip", "a"),
-		exec.Command("ip", "r"),
-	)
-	for i, cmd := range cmds {
-		excCmc, err := cmd.Output()
-		if err != nil {
-			log.Println("error index: ", strconv.Itoa(i), " err: ", err.Error())
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		val := int64(0)
+		payments := s.payments[i*count:]
+		for _, payment := range payments {
+			val += int64(payment.Amount)
 		}
+		mu.Lock()
+		sum += val
+		mu.Unlock()
 
-		log.Println("cmd index: ", strconv.Itoa(i), " cmd output: ", string(excCmc))
-	}
+	}()
+	wg.Wait()
+	return types.Money(sum)
 }

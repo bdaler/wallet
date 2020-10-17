@@ -709,13 +709,19 @@ func TestService_Import2(t *testing.T) {
 	//	return
 	//}
 }
+
 func BenchmarkService_SumPayments(b *testing.B) {
 	s := newTestService()
-	want := types.Money(1)
-	for i := 0; i < b.N; i++ {
-		result := s.SumPayments(2)
-		if result != want {
-			b.Fatalf("invalid result, got %v, want %v", result, want)
-		}
+	account1, _ := s.AddAccountWithBalance("9127660305", 10)
+	_, _ = s.Pay(account1.ID, 10, types.CategoryIt)
+	_, _ = s.Pay(account1.ID, 10, types.CategoryIt)
+	_, _ = s.Pay(account1.ID, 10, types.CategoryIt)
+	_, _ = s.Pay(account1.ID, 10, types.CategoryIt)
+
+	want := types.Money(10)
+
+	got := s.SumPayments(2)
+	if want != got {
+		b.Errorf(" error, want => %v got => %v", want, got)
 	}
 }
