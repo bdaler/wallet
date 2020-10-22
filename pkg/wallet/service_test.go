@@ -721,3 +721,23 @@ func BenchmarkService_SumPayments(b *testing.B) {
 		b.Errorf(" error, want => %v got => %v", want, got)
 	}
 }
+
+func TestService_SumPaymentsWithProgress(t *testing.T) {
+	s := newTestService()
+	for i := 0; i < 200_000; i++ {
+		payment := &types.Payment{
+			ID:     uuid.New().String(),
+			Amount: types.Money(100),
+		}
+		s.payments = append(s.payments, payment)
+	}
+
+	s.SumPaymentsWithProgress()
+	//want := make(chan types.Progress)
+	//got := s.SumPaymentsWithProgress()
+	//
+	//if want != got {
+	//	t.Errorf(" error, want => %v got => %v", want, got)
+	//}
+	//
+}
